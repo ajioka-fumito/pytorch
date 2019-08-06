@@ -28,7 +28,6 @@ if __name__ == "__main__":
     dataset = Mydataset("./linear_model/data/koos234.csv")
     ld = DataLoader(dataset)
     for i,j in ld:
-        j.long()
         print(i,j)
 
 
