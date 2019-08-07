@@ -50,3 +50,4 @@ if __name__ == "__main__":
     ld = DataLoader(dataset)
     for i,j in ld:
         print(i.shape,j)
+        print(i.shape[1])

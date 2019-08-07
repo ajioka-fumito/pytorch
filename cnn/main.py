@@ -16,7 +16,7 @@ def main(parameter):
     ld = DataLoader(dataset)
 
     # define model and method of opt
-    model = Model().to(device)
+    model = Model(parameter["input_size"]).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
@@ -39,10 +39,10 @@ def main(parameter):
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-
+        print(loss)
             
 
 
 if __name__ == "__main__":
-    parameter = {}
+    parameter = {"input_size":256}
     main(parameter)
