@@ -15,12 +15,11 @@ class Model(nn.Module):
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(self.x_2_shape**2*16, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3 = nn.Linear(84, 1)
 
     def forward(self, x):
         x_input = x
         x_1 = self.pool(F.relu(self.conv1(x_input)))
-        print(x_1.shape)
         x_2 = self.pool(F.relu(self.conv2(x_1)))
         x_3 = x_2.view(-1,self.x_2_shape**2*16)
         x_4 = F.relu(self.fc1(x_3))
@@ -41,3 +40,5 @@ if __name__ == "__main__":
         j = j.float().to("cuda")
 
         k = model(i)
+        print(j.shape)
+        print(k.shape)
