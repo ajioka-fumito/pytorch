@@ -11,50 +11,56 @@ class Main:
     def __init__(self,parameter):
         self.parameter = parameter
 
-    def main(self):
-        # define using gpu cpu
-        GPU = True
-        device = torch.device("cuda" if GPU else "cpu")
         # define data
-        dataset = MyDataset(self.parameter["train_data_dir"],transform = transforms.Compose([transforms.ToTensor()]))
-        ld = DataLoader(dataset)
+        self.dataset = MyDataset(self.parameter["train_data_dir"],transform = transforms.Compose([transforms.ToTensor()]))
+        self.ld = DataLoader(self.dataset)
+
+        #define using gpu or not
+        self.GPU = True
+        self.device = torch.device("cuda" if self.GPU else "cpu")
 
         # define model and method of opt
-        model = Model(self.parameter["input_size"]).to(device)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(model.parameters(), lr=self.parameter["training_rate"], momentum=0.9)
+        self.model = Model(self.parameter["input_size"]).to(self.device)
+        self.criterion = nn.CrossEntropyLoss()
+        self.ls = 0.01
+        self.momentum = 0.9
+        self.optimizer = optim.SGD(self.model.parameters(),lr=0.001,momentum=self.momentum)
 
-        # define training
+
+    def main(self):
+        self.train()
+        self.test()
+            
+    def train(self):
         for epoch in range(self.parameter["epochs"]):  # loop over the dataset multiple times
 
-            running_loss = 0.0
-            for i, data in enumerate(ld):
-                model.train()
+            for i, data in enumerate(self.ld):
+                self.model.train()
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data
-                inputs =inputs.to(device).float()
-                labels =labels.to(device).long()
+                inputs =inputs.to(self.device).float()
+                labels =labels.to(self.device).long()
 
                 # zero the parameter gradients
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
 
                 # forward + backward + optimize
-                outputs = model(inputs)
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
 
-                loss = criterion(outputs, labels)
                 loss.backward()
-                optimizer.step()
-            
-            model.eval()
-
-
+                self.optimizer.step()
             print(loss)
-            
 
+    #def test(self):
+
+
+        
 
 if __name__ == "__main__":
     parameter = {"input_size":256,"epochs":100,
                  "train_data_dir":"./data/train/inputs",
                  "test_data_dit":"./data/test/inputs",
                  "training_rate":0.001}
-    main(parameter)
+    main = Main(parameter)
+    main.main()
