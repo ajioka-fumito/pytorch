@@ -15,7 +15,8 @@ class Model(nn.Module):
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(self.x_2_shape**2*16, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 1)
+        self.fc3 = nn.Linear(84, 2)
+        
 
     def forward(self, x):
         x_input = x

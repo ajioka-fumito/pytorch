@@ -6,7 +6,6 @@ import torch
 from md.loader import MyDataset
 from md.model import Model
 
-
 def main(parameter):
     # define using gpu cpu
     GPU = True
@@ -34,9 +33,9 @@ def main(parameter):
             # zero the parameter gradients
             optimizer.zero_grad()
 
-
             # forward + backward + optimize
             outputs = model(inputs)
+
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()

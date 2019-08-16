@@ -8,7 +8,6 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-
 class MyDataset(Dataset):
     def __init__(self, path, transform=True):
         self.path = path
@@ -39,15 +38,13 @@ class MyDataset(Dataset):
         # F  : ferrite iamge
         
         if file_name[0:3]=="F-M":
-            label = np.array([1])
+            label = np.array(0)
         else:
-            label = np.array([0])
+            label = np.array(1)
         
         return image,label
 
 if __name__ == "__main__":
     dataset = MyDataset("./data/train/inputs",transform = transforms.Compose([transforms.ToTensor()]))
     ld = DataLoader(dataset)
-    for i,j in ld:
-        print(i.shape,j)
-        print(i.shape[1])
+
