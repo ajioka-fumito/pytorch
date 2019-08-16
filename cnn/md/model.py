@@ -28,18 +28,3 @@ class Model(nn.Module):
         x_6 = self.fc3(x_5)
         return x_6
 
-if __name__ == "__main__":
-    from loader import MyDataset
-    from torch.utils.data import DataLoader, Dataset
-    from torchvision import transforms
-    dataset = MyDataset("./data/train/inputs",transform = transforms.Compose([transforms.ToTensor()]))
-    ld = DataLoader(dataset)
-
-    model = Model(input_size=256).float().to("cuda")
-    for i,j in ld:
-        i = i.float().to("cuda")
-        j = j.float().to("cuda")
-
-        k = model(i)
-        print(j.shape)
-        print(k.shape)
