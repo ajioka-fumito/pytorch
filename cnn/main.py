@@ -1,49 +1,86 @@
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
+from torchvision.transforms import Compose,ToTensor 
 import torch
 from md.loader import MyDataset
-from md.model import Model
+from md.model import AlexNet as Model
 
-def main(parameter):
-    # define using gpu cpu
-    GPU = True
-    device = torch.device("cuda" if GPU else "cpu")
-    # define data
-    dataset = MyDataset(parameter["train_data_dir"],transform = transforms.Compose([transforms.ToTensor()]))
-    ld = DataLoader(dataset)
 
-    # define model and method of opt
-    model = Model(parameter["input_size"]).to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=parameter["training_rate"], momentum=0.9)
+class Main:
+    def __init__(self,parameter):
+        self.parameter = parameter
 
-    # define training
-    for epoch in range(parameter["epochs"]):  # loop over the dataset multiple times
+        # define training data
+        self.train_dataset = MyDataset(self.parameter["train_data_dir"],transform = Compose([ToTensor()]))
+        self.train_ld = DataLoader(self.train_dataset)
 
-        running_loss = 0.0
-        for i, data in enumerate(ld):
-            
+        # define test data
+        self.test_dataset = MyDataset(self.parameter["test_data_dir"],transform = Compose([ToTensor()]))
+        self.test_ld = DataLoader(self.test_dataset)
+
+        #define using gpu or not
+        self.GPU = True
+        self.device = torch.device("cuda" if self.GPU else "cpu")
+
+        # define model and method of opt
+        self.model = Model(self.parameter["input_size"]).to(self.device)
+        self.criterion = nn.BCELoss()
+        self.optimizer = optim.SGD(self.model.parameters(),lr=0.001,momentum=0.9)
+
+    def main(self):
+        self.train()
+        
+    def train(self):
+        for epoch in range(self.parameter["epochs"]):
+
+            for i, (image,label) in enumerate(self.train_ld):
+                self.model.train()
+                # get the inputs; data is a list of [inputs, labels]
+                image = image.to(self.device).float()
+                label = label.to(self.device).float()
+
+                # zero the parameter gradients
+                self.optimizer.zero_grad()
+
+                # forward + backward + optimize
+                outputs = self.model(image)
+                loss = self.criterion(outputs, label)
+                loss.backward()
+                self.optimizer.step()
+
+            print(loss)
+            self.test()
+
+    def test(self):
+        cnt = 0
+        miss_ferrite = 0 # フェライトをマルテンサイトと認識した数
+        miss_martencite = 0 # マルテンサイトをフェライトと認識した数
+
+        for i,(image,label) in enumerate(self.test_ld):
+            self.model.eval()
             # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            inputs =inputs.to(device).float()
-            labels =labels.to(device).long()
+            image = image.to(self.device).float()
+            label = label.to(self.device).float()
+            _,label = torch.max(label,dim=1)
+            predict = self.model(image)
+            _,predict = torch.max(predict,dim=1)
 
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = model(inputs)
-
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-        print(loss)
-            
-
-
+            if label==predict:
+                cnt += 1
+            elif predict==0:
+                miss_martencite += 1
+            else:
+                miss_ferrite += 1
+        test_num = i+1
+        print("accuracy:",cnt/test_num)
+        print(miss_martencite/test_num)
+        print(miss_ferrite/test_num)
+        
 if __name__ == "__main__":
-    parameter = {"input_size":256,"epochs":100,"train_data_dir":"./data/train/inputs","training_rate":0.001}
-    main(parameter)
+    parameter = {"input_size":256,"epochs":100,
+                 "train_data_dir":"./data/train/inputs",
+                 "test_data_dir":"./data/test/inputs",
+                 "training_rate":0.01}
+    main = Main(parameter)
+    main.main()
