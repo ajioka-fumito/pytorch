@@ -38,13 +38,14 @@ class MyDataset(Dataset):
         # F  : ferrite iamge
         
         if file_name[0:3]=="F-M":
-            label = np.array(0)
+            label = np.array([0,1])
         else:
-            label = np.array(1)
+            label = np.array([1,0])
         
         return image,label
 
 if __name__ == "__main__":
-    dataset = MyDataset("./data/train/inputs",transform = transforms.Compose([transforms.ToTensor()]))
+    dataset = MyDataset("../data/train",transform = transforms.Compose([transforms.ToTensor()]))
     ld = DataLoader(dataset)
+    print(len(ld))
 
