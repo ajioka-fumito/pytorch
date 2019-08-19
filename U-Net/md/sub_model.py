@@ -19,18 +19,18 @@ class Conv_Conv(nn.Module):
         # first convolution
         conv1 = self.conv1(x)
         conv1 = self.batchnorm(conv1)
-        conv1 = nn.Relu(conv1,inplace=True)
+        conv1 = F.relu(conv1,inplace=True)
         # second convokution
         conv2 = self.conv2(conv1)
         conv2 = self.batchnorm(conv2)
-        conv2 = nn.Relu(conv2,inplace=True)
+        conv2 = F.relu(conv2,inplace=True)
         return conv2
 
 class Down(nn.Module):
     # poolingで特徴抽出を行う。
     # 論文通りkernel_size=2,stride=2で設定
     # pytorchではデフォルトでstride=kernel_sizeとなるらしい
-    def __init__(self,input_ch,putput_ch):
+    def __init__(self):
         super(Down,self).__init__()
         self.pool = nn.MaxPool2d(kernel_size=2)
     
@@ -42,11 +42,10 @@ class Up(nn.Module):
     # 色々議論されている。
     # transposeを理解できなかった。
     # とりあえずupsampingで考える。
-
     def __init__(self):
         super(Up,self).__init__()
 
-        self.upsampling = nn.Upsample(sacle_factor=2,mode="bilinear",align_corners=True)
+        self.upsampling = nn.Upsample(scale_factor=2,mode="bilinear",align_corners=True)
 
     def forward(self,x):
         return self.upsampling(x)

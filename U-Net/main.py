@@ -3,30 +3,33 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose,ToTensor 
 import torch
-from md.loader import MyDataset
-from md.model import AlexNet as Model
-
+from md.loader import MyDataset,Make_dataset_paths
+from md.model import UNet as Model
+from md.loss import DiceLoss
 
 class Main:
     def __init__(self,parameter):
         self.parameter = parameter
 
         # define training data
-        self.train_dataset = MyDataset(self.parameter["train_data_dir"],transform = Compose([ToTensor()]))
+        self.paths = Make_dataset_paths(self.parameter)
+        self.train_image_paths,self.train_label_paths = self.paths.generate_tarin_paths()
+        self.train_dataset = MyDataset(self.train_image_paths,self.train_label_paths,transform = Compose([ToTensor()]))
         self.train_ld = DataLoader(self.train_dataset)
 
         # define test data
+        """
         self.test_dataset = MyDataset(self.parameter["test_data_dir"],transform = Compose([ToTensor()]))
         self.test_ld = DataLoader(self.test_dataset)
-
+        """
         #define using gpu or not
         self.GPU = True
         self.device = torch.device("cuda" if self.GPU else "cpu")
 
         # define model and method of opt
-        self.model = Model(self.parameter["input_size"]).to(self.device)
-        self.criterion = nn.BCELoss()
-        self.optimizer = optim.SGD(self.model.parameters(),lr=0.001,momentum=0.9)
+        self.model = Model(self.parameter["n_chanels"],self.parameter["n_classes"]).to(self.device)
+        self.criterion = DiceLoss()
+        self.optimizer = optim.Adam(self.model.parameters(),lr=0.0001)
 
     def main(self):
         self.train()
@@ -45,12 +48,15 @@ class Main:
 
                 # forward + backward + optimize
                 outputs = self.model(image)
+                print(label.shape)
+                print(outputs.shape)
                 loss = self.criterion(outputs, label)
+                print(loss)
                 loss.backward()
                 self.optimizer.step()
 
             print(loss)
-            self.test()
+            #self.test()
 
     def test(self):
         cnt = 0
@@ -66,21 +72,18 @@ class Main:
             predict = self.model(image)
             _,predict = torch.max(predict,dim=1)
 
-            if label==predict:
-                cnt += 1
-            elif predict==0:
-                miss_martencite += 1
-            else:
-                miss_ferrite += 1
-        test_num = i+1
+
         print("accuracy:",cnt/test_num)
         print(miss_martencite/test_num)
         print(miss_ferrite/test_num)
         
 if __name__ == "__main__":
-    parameter = {"input_size":256,"epochs":100,
-                 "train_data_dir":"./data/train/inputs",
-                 "test_data_dir":"./data/test/inputs",
+    parameter = {"train_image_dir":"./data/train/image",
+                 "train_label_dir":"./data/train/label",
+                 "test_image_dir":"./data/test/iamge",
+                 "test_label_dir":"./data/test/label",
+                 "input_size":128,"epochs":100,
+                 "n_classes":3,"n_chanels":3,
                  "training_rate":0.01}
     main = Main(parameter)
     main.main()
